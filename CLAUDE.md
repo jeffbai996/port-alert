@@ -4,6 +4,8 @@ Portfolio sentinel — threshold-based monitoring and alerting for IBKR position
 
 ## What This Is
 
+**NB:** Read this and see if it may be useful for the implementation (https://code.claude.com/docs/en/channels)
+
 A lightweight daemon that periodically checks portfolio health via the IBKR MCP server and fires alerts when thresholds are breached. Designed to run on fragserv (WSL2, Ryzen 9 5900X) via cron during market hours.
 
 **Key constraint**: No LLM calls. Every check is deterministic threshold logic. This must be cheap to run (CPU + one MCP round-trip per cycle) and reliable enough to trust with real money alerts.

@@ -6,3 +6,8 @@ __pycache__/
 *.db
 .DS_Store
 logs/
+
+# Internal architecture plans/specs — kept locally for agent context, never
+# committed. Public repo; these inevitably leak internal infra details.
+docs/superpowers/
+docs/handoff-prompts/

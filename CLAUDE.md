@@ -6,7 +6,7 @@ Portfolio sentinel — threshold-based monitoring and alerting for IBKR position
 
 **NB:** Read this and see if it may be useful for the implementation (https://code.claude.com/docs/en/channels)
 
-A lightweight daemon that periodically checks portfolio health via the IBKR MCP server and fires alerts when thresholds are breached. Designed to run on fragserv (WSL2, Ryzen 9 5900X) via cron during market hours.
+A lightweight daemon that periodically checks portfolio health via the IBKR MCP server and fires alerts when thresholds are breached. Designed to run on a small Linux/WSL host via cron during market hours.
 
 **Key constraint**: No LLM calls. Every check is deterministic threshold logic. This must be cheap to run (CPU + one MCP round-trip per cycle) and reliable enough to trust with real money alerts.
 
@@ -26,7 +26,7 @@ cron (every 5 min, market hours)
        │   ├─ webhook.py       — generic webhook (Slack, Discord, ntfy.sh)
        │   └─ file.py          — append to local log (always-on fallback)
        ├─ config.py       ← thresholds + alert routing from .env / YAML
-       ├─ ibkr.py         ← thin MCP client (reuse pattern from ticker-tape/ibkr_client.py)
+       ├─ ibkr.py         ← thin MCP client (streamable HTTP)
        └─ state.py        ← last-alert dedup + cooldown tracking (SQLite)
 ```
 
@@ -41,12 +41,12 @@ cron (every 5 min, market hours)
 
 ## MCP Client
 
-Reuse the streamable HTTP MCP client pattern from `ticker-tape/ibkr_client.py`:
+Streamable HTTP MCP client:
 - Connect to IBKR MCP server at `IBKR_MCP_URL` (env var, default `http://localhost:8000/mcp`)
 - Supports multi-account via `IBKR_MCP_URL_2`
 - Each sentinel run opens one session, makes all tool calls, closes. No persistent connection needed.
 
-The ibkr-terminal MCP server exposes these tools we'll use:
+The IBKR MCP server exposes these tools we'll use:
 - `ibkr_get_account_summary` — NLV, excess liquidity, margin used, cushion
 - `ibkr_get_positions` — all positions with market value, unrealized P&L, weight
 - `ibkr_get_pnl_by_position` — per-position daily/unrealized P&L
@@ -79,12 +79,12 @@ The ibkr-terminal MCP server exposes these tools we'll use:
 User-defined price alerts in config file:
 ```yaml
 price_alerts:
-  NVDA:
-    above: [160, 180]
-    below: [120, 100]
-  GENERIC:
-    above: [250, 280]
+  AAPL:
+    above: [200, 220]
     below: [180, 160]
+  MSFT:
+    above: [450, 480]
+    below: [400, 380]
 ```
 Triggered once per level crossing, cooldown prevents re-fire.
 
@@ -171,13 +171,13 @@ alerts:
 ```bash
 # Market hours only (ET): 9:25 AM - 4:05 PM, Mon-Fri
 # Converted to server local time as needed
-*/5 9-16 * * 1-5 cd /home/jbai/repos/port-alert && venv/bin/python sentinel.py >> logs/cron.log 2>&1
+*/5 9-16 * * 1-5 cd ~/port-alert && venv/bin/python sentinel.py >> logs/cron.log 2>&1
 
 # Pre-market check at 9:00 AM ET
-0 9 * * 1-5 cd /home/jbai/repos/port-alert && venv/bin/python sentinel.py >> logs/cron.log 2>&1
+0 9 * * 1-5 cd ~/port-alert && venv/bin/python sentinel.py >> logs/cron.log 2>&1
 
 # Gateway health check every 30 min outside market hours (catch overnight disconnects)
-*/30 0-8,17-23 * * 1-5 cd /home/jbai/repos/port-alert && venv/bin/python sentinel.py --check connection >> logs/cron.log 2>&1
+*/30 0-8,17-23 * * 1-5 cd ~/port-alert && venv/bin/python sentinel.py --check connection >> logs/cron.log 2>&1
 ```
 
 ## Dependencies
@@ -194,7 +194,7 @@ No Flask, no web server, no frontend. This is a headless sentinel.
 
 ## Implementation Order
 
-1. **ibkr.py** — MCP client (port from ticker-tape/ibkr_client.py, adapt for sync-only usage)
+1. **ibkr.py** — MCP streamable HTTP client (sync-only usage)
 2. **config.py** — YAML + env loading
 3. **state.py** — SQLite alert history + cooldown logic
 4. **checks/connection.py** — gateway health (simplest check, validates MCP client works)

@@ -1,137 +1,38 @@
-# port-alert
+# port-alert (archived)
 
-A lightweight portfolio alert engine for IBKR accounts. Runs on cron during market hours, checks account health against configurable thresholds, and fires alerts via webhook, email, or file log.
+> **Archive notice — this repository is not a working portfolio-alert application.** It preserves an early project brief for a deterministic IBKR account-monitoring tool; the described Python engine, configuration, checks, and alert backends were never implemented here.
 
-**Zero LLM calls. Every check is deterministic threshold logic.**
+## Status
 
-## What it monitors
+Archived on 2026-08-24. Do **not** rely on this repository to monitor an account, send trading alerts, or manage portfolio risk.
 
-- **Margin health** — excess liquidity, utilization %, maintenance margin spikes
-- **Position risk** — concentration, unrealized loss, daily drawdown per position
-- **Portfolio drawdown** — total portfolio daily P&L
-- **Price levels** — user-defined support/resistance crossings per ticker
-- **Earnings proximity** — warns N days before held positions report
-- **Gateway health** — IBKR connection status, checked first before anything else
+The repository currently contains:
 
-## Architecture
+- `CLAUDE.md` — the historical design brief and proposed architecture.
+- `test.sh` — a minimal shell smoke test only; it does not test an alerting application.
+- `.gitignore` — initial ignore rules.
 
-```
-cron (every 5 min, market hours)
-  └─ engine.py
-       ├─ checks/         individual check modules (margin, positions, prices, earnings, connection)
-       ├─ alerts/         delivery backends (webhook, email, file)
-       ├─ ibkr.py         MCP client — connects to ibkr-terminal MCP server
-       ├─ config.py       threshold + routing config from YAML + .env
-       └─ state.py        SQLite dedup — prevents alert spam, per-severity cooldowns
-```
+There is no Python package, service entry point, dependency manifest, configuration template, IBKR integration, persistence layer, or alert-delivery implementation in this repository.
 
-Data flow: `cron → engine.py → ibkr MCP → check modules → dedup → alert backends`
+## Original concept
 
-## Alert delivery
+The proposed tool would have run on a schedule during market hours, queried an IBKR gateway, evaluated deterministic thresholds, deduplicated alerts, and sent notifications through a file, webhook, or email backend. That concept was not developed into a usable implementation in this repository.
 
-| Backend | Use case |
-|---|---|
-| `file` | Always-on fallback, append to `logs/alerts.log` |
-| `webhook` | Slack, Discord, ntfy.sh, or any HTTP endpoint |
-| `email` | Gmail via app password (SMTP) |
+## Smoke test
 
-Routing is configurable per severity: CRITICAL can go to all three, INFO can be file-only.
+The only runnable file is a shell sanity check:
 
-## Dedup & cooldown
-
-Alerts are deduplicated via SQLite. Re-fire intervals:
-- **CRITICAL**: every 15 minutes (keeps nagging while condition persists)
-- **WARNING**: every 2 hours
-- **INFO**: every 24 hours
-
-Cooldown resets if the condition clears and re-triggers.
-
-## Setup
-
-### Requirements
-
-- Python 3.11+
-- [ibkr-terminal-core](https://github.com/jeffbai996/ibkr-terminal-core) MCP server running locally
-- IBKR TWS or IB Gateway running with API access enabled
-
-### Install
-
-```bash
-git clone https://github.com/jeffbai996/port-alert
-cd port-alert
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+```sh
+sh test.sh
 ```
 
-### Configure
+Its successful output confirms only that the checked-out script can run; it is **not** an application health check.
 
-```bash
-cp env.example .env
-# edit .env with your MCP URL, webhook URL, email credentials
-```
+## Related projects
 
-```bash
-cp config.example.yaml config.yaml
-# edit config.yaml — thresholds, price alerts, alert routing
-```
-
-Key `.env` vars:
-
-```bash
-IBKR_MCP_URL=http://localhost:8000/mcp
-ALERT_WEBHOOK_URL=https://ntfy.sh/your-topic
-GMAIL_USER=your@gmail.com
-GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
-ALERT_EMAIL_TO=your@gmail.com
-```
-
-### Run manually
-
-```bash
-# full check cycle
-python engine.py
-
-# dry run — all checks, no alerts fired
-python engine.py --dry-run
-
-# single check only
-python engine.py --check connection
-python engine.py --check margin
-```
-
-### Cron (market hours ET)
-
-```cron
-# Every 5 min during market hours (Mon-Fri, 9:25 AM – 4:05 PM ET)
-*/5 9-16 * * 1-5 cd /path/to/port-alert && venv/bin/python engine.py >> logs/cron.log 2>&1
-
-# Pre-market at 9:00 AM
-0 9 * * 1-5 cd /path/to/port-alert && venv/bin/python engine.py >> logs/cron.log 2>&1
-
-# Gateway health every 30 min outside market hours
-*/30 0-8,17-23 * * 1-5 cd /path/to/port-alert && venv/bin/python engine.py --check connection >> logs/cron.log 2>&1
-```
-
-Adjust times to your server's local timezone.
-
-## Dependencies
-
-```
-httpx
-mcp
-pyyaml
-python-dotenv
-yfinance        # earnings dates only
-```
-
-No web server, no frontend, no message queue. Headless daemon designed to run on a home server or VPS.
-
-## Related
-
-- [ibkr-terminal](https://github.com/jeffbai996/ibkr-terminal) — terminal UI for IBKR accounts
-- [ibkr-terminal-core](https://github.com/jeffbai996/ibkr-terminal-core) — MCP server that port-alert connects to
+- [ibkr-terminal](https://github.com/jeffbai996/ibkr-terminal)
+- [ibkr-terminal-core](https://github.com/jeffbai996/ibkr-terminal-core)
 
 ## License
 
-MIT
+No license file is included.

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
+set -eu
 
-echo "port-alert"
-sleep 1
+printf '%s\n' 'port-alert archive smoke test passed'

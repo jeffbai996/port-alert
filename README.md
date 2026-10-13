@@ -31,7 +31,6 @@ Its successful output confirms only that the checked-out script can run; it is *
 ## Related projects
 
 - [ibkr-terminal](https://github.com/jeffbai996/ibkr-terminal)
-- [ibkr-terminal-core](https://github.com/jeffbai996/ibkr-terminal-core)
 
 ## License
 

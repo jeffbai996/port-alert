@@ -8,7 +8,6 @@ Archived on 2026-08-24. Do **not** rely on this repository to monitor an account
 
 The repository currently contains:
 
-- `CLAUDE.md` — the historical design brief and proposed architecture.
 - `test.sh` — a minimal shell smoke test only; it does not test an alerting application.
 - `.gitignore` — initial ignore rules.
 

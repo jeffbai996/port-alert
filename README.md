@@ -1,15 +1,15 @@
-# port-alert (archived)
+# port-alert (retired)
 
-> **Archive notice — this repository is not a working portfolio-alert application.** It preserves an early project brief for a deterministic IBKR account-monitoring tool; the described Python engine, configuration, checks, and alert backends were never implemented here.
+> **Retirement notice — this repository is not a working portfolio-alert application.** It preserves an early project brief for a deterministic IBKR account-monitoring tool; the described Python engine, configuration, checks, and alert backends were never implemented here.
 
 ## Status
 
-Archived on 2026-08-24. Do **not** rely on this repository to monitor an account, send trading alerts, or manage portfolio risk.
+Retired on 2026-08-24; nothing was built. Do **not** rely on this repository to monitor an account, send trading alerts, or manage portfolio risk.
 
 The repository currently contains:
 
 - `test.sh` — a minimal shell smoke test only; it does not test an alerting application.
-- `.gitignore` — initial ignore rules.
+- `.gitignore`, `.gitattributes` and `.cc-pii-public` — repository housekeeping.
 
 There is no Python package, service entry point, dependency manifest, configuration template, IBKR integration, persistence layer, or alert-delivery implementation in this repository.
 
@@ -29,7 +29,7 @@ Its successful output confirms only that the checked-out script can run; it is *
 
 ## Related projects
 
-- [ibkr-terminal](https://github.com/jeffbai996/ibkr-terminal)
+- [ibkr-mcp](https://github.com/jeffbai996/ibkr-mcp)
 
 ## License
 
